@@ -29,7 +29,7 @@ def save_state(state):
         json.dump(state, f, indent=4)
 
 def send_discord_webhook(content, event=None):
-    payload = {"content": content}
+    payload = {"content": content, "username": "BISAYANG LOOKSMAXXER PRO"}
     
     if event:
         event_title = event.get("name", {}).get("text", "Untitled Event")
