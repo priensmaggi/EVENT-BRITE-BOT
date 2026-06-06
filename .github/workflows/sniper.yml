@@ -1,0 +1,44 @@
+name: Eventbrite Sniper
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Runs every 5 minutes
+  workflow_dispatch: # Allows manual trigger from GitHub UI
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Fetch State
+        run: |
+          git fetch origin state || echo "No state branch yet"
+          git checkout origin/state -- state.json || echo "No state.json yet"
+
+      - name: Run Bot
+        env:
+          EVENTBRITE_OAUTH_TOKEN: ${{ secrets.EVENTBRITE_OAUTH_TOKEN }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python bot.py
+
+      - name: Save State
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B state
+          git add state.json || echo "No state.json to add"
+          git commit -m "Update state" || echo "No changes to commit"
+          git push -f origin state
